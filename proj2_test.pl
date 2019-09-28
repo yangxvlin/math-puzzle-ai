@@ -1,7 +1,7 @@
 %  Author   : Peter Schachte
 %  Origin   : Tue Oct  7 17:49:54 2014
 %  Purpose  : Sample test cases for proj2
-%  Copyright: © 2014 Peter Schachte.  All rights reserved.
+%  Copyright: ï¿½ 2014 Peter Schachte.  All rights reserved.
 %
 %  The test cases I will use for testing are different from these, but
 %  generated in the same way, and of similar difficulty.

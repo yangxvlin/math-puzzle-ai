@@ -25,15 +25,58 @@
 :- ensure_loaded(library(clpfd)).
 
 
-%% puzzlesolution(+Puzzle)
-puzzlesolution/1.
-puzzlesolution(Puzzle) :-
+%% puzzle_solution(+Puzzle)
+puzzle_solution/1.
+% puzzle_solution(Puzzle) :-
+%     Puzzle = [ColumnBehind0|RowRows],
+%     ColumnBehind0 = [0|Column],
+%     getNthListElements(RowRows, 1, Row, Rows),
+%     % a square grid of squares, each to be filled in with a single digit 1–9
+%     allDigits(Rows),
+%     % all squares on the diagonal line from upper left to lower right contain the same value
+%     checkMatrixDiagonal(Rows),
+%     % each row and each column contains no repeated digits
+%     allDifferentList(Rows),
+%     checkMatrixSP(Rows, Row),
+%     transpose(Rows, RowsTrans),
+%     allDifferentList(RowsTrans),
+%     % the heading of reach row and column (leftmost square in a row and topmost 
+%     % square in a column) holds either the sum or the product of all the digits 
+%     % in that row or column
+%     checkMatrixSP(RowsTrans, Column),
+%     checkMatrixGround(Rows),
+%     checkMatrixGround(RowsTrans).
+
+puzzle_solution(Puzzle) :-
     Puzzle = [ColumnBehind0|RowRows],
     ColumnBehind0 = [0|Column],
     getNthListElements(RowRows, 1, Row, Rows),
-    allDigits(Rows),
-    allDifferentList(Rows),
+    % all squares on the diagonal line from upper left to lower right contain the same value
+    generateDiagonal(Rows),
+    % a square grid of squares, each to be filled in with a single digit 1–9
+    maplist(generateRow(), Row, Rows),
     transpose(Rows, RowsTrans),
+    % the heading of reach row and column (leftmost square in a row and topmost 
+    % square in a column) holds either the sum or the product of all the digits 
+    % in that row or column
+    allDifferentList(RowsTrans),
+    checkMatrixSP(RowsTrans, Column),
+    checkMatrixGround(Rows),
+    checkMatrixGround(RowsTrans).
+
+same([]).   % You only need this one if you want the empty list to succeed
+same([_]).
+same([X,X|T]) :- same([X|T]).
+
+generateDiagonal(Matrix) :-
+    diagonal(Matrix, Diagonal),
+    maplist(between(1, 9), Diagonal),
+    same(Diagonal).
+
+generateRow(RowSorP, Row) :-
+    maplist(between(1, 9), Row),
+    all_different(Row),
+    checkList(RowSorP, Row).
 
 allDifferentList(Lists) :-
     maplist(all_different(), Lists).
@@ -41,72 +84,26 @@ allDifferentList(Lists) :-
 allDigits(Rows) :-
     maplist(maplist(between(1, 9)), Rows).
 
-puzzlesolution(Column, Row, Rows) :-
-    transpose(Rows, Columns),
-    (maplist(allGround(), Rows) ->
-    diagonal(Rows, Diagonal),
-    checkPuzzle(Row, Column, Rows, Columns, Diagonal)
-    ;
-    
-    % generate(, Next),
-    puzzlesolution(Column, Row, Rows)
-    ).
-
-% fill([], _).
-% fill(Column, Row, Rows, Columns, Out) :-
-
-% replaceUnground([], [], Y) :- write(Y).
-% replaceUnground([], [], _).
-% replaceUnground([R|Row], [X|Xs], Out) :-
-%     ( allGround(X)
-%     -> replaceUnground(Row, Xs, [X|Out])
-%     ; generate(R, X, XGround), replaceUnground(Row, Xs, [XGround|Out])
-%     ).
-
-replaceUnground([R|Row], [X|Xs], Out) :-
-    replaceUnground([R|Row], [X|Xs], [], Out).
-replaceUnground([], [], a, _).
-replaceUnground([], [], ACC, Out) :- replaceUnground([], [], a, [ACC|Out]).
-replaceUnground([R|Row], [X|Xs], ACC, Out) :-
-    ( allGround(X)
-    -> replaceUnground(Row, Xs, [X|ACC], Out)
-    ; generate(R, X, XGround),
-        replaceUnground(Row, [XGround|Xs], ACC, Out)
-    ).
-
-% replaceUnground([], []).
-% replaceUnground([R|Row], [X|Xs]) :-
-%     ( allGround(X)
-%     -> replaceUnground(Row, Xs)
-%     ; generate(R, X, XGround),
-%         X = XGround, 
-%         replaceUnground(Row, Xs)
-%     ).
-
+checkMatrixGround(Matrix) :-
+    maplist(allGround(), Matrix).
 
 allGround(List) :- maplist(ground(), List).
 
 product(X, Y, Z) :- Z is X * Y.
 productList(List, Product) :- foldl(product, List, 1, Product).
 
+checkMatrixDiagonal(Matrix) :-
+    diagonal(Matrix, Diagonal),
+    checkDiagonal(Diagonal).
+
 checkDiagonal(Diagonal) :- \+ all_different(Diagonal).
 
+checkMatrixSP(Matrix, SP) :-
+    maplist(checkList(), SP, Matrix).
+    
+
 checkList(ListSOrP, List) :-
-    all_different(List), 
     (sum_list(List, ListSOrP); productList(List, ListSOrP)).
-
-% generateList(_, [], _).
-% generateList(ListSOrP, [X|Xs], Ys) :-
-%     ( \+ ground(X), between(1, 9, X), generateList(ListSOrP, [X|Xs], [X|Ys]) )
-%     ; generateList(ListSOrP, Xs, [X|Ys]).
-
-% possible 1
-% generateList(ListSOrP, [], Ys) :- sum_list(Ys, ListSOrP); productList(Ys, ListSOrP).
-% generateList(ListSOrP, [X|Xs], Ys) :-
-%     ( \+ ground(X)
-%     -> between(1, 9, X), generateList(ListSOrP, [X|Xs], Ys)
-%     ; generateList(ListSOrP, Xs, [X|Ys])
-%     ).
 
 generate(ListSOrP, List, Out) :-   
     findall(X, (generateList(ListSOrP, List), X = List, checkList(ListSOrP, X)), Out).
@@ -118,13 +115,6 @@ generateList(ListSOrP, [X|Xs]) :-
     -> between(1, 9, X), generateList(ListSOrP, [X|Xs])
     ; generateList(ListSOrP, Xs)
     ).
-
-checkPuzzle(Row, Column, Rows, Columns, Diagonal) :-
-    maplist(allGround(), Rows),
-    checkDiagonal(Diagonal),
-    maplist(checkList(), Row, Rows),
-    maplist(checkList(), Column, Columns).
-
 
 diagonal(Matrix, Diagonal) :-
     length(Matrix, Length),
