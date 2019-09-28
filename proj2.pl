@@ -54,7 +54,7 @@ puzzle_solution(Puzzle) :-
     % all squares on the diagonal line from upper left to lower right contain the same value
     generateDiagonal(Rows),
     % a square grid of squares, each to be filled in with a single digit 1–9
-    maplist(generateRow(), Row, Rows),
+    maplist(generateRow, Row, Rows),
     transpose(Rows, RowsTrans),
     % the heading of reach row and column (leftmost square in a row and topmost 
     % square in a column) holds either the sum or the product of all the digits 
@@ -79,15 +79,15 @@ generateRow(RowSorP, Row) :-
     checkList(RowSorP, Row).
 
 allDifferentList(Lists) :-
-    maplist(all_different(), Lists).
+    maplist(all_different, Lists).
 
 allDigits(Rows) :-
     maplist(maplist(between(1, 9)), Rows).
 
 checkMatrixGround(Matrix) :-
-    maplist(allGround(), Matrix).
+    maplist(allGround, Matrix).
 
-allGround(List) :- maplist(ground(), List).
+allGround(List) :- maplist(ground, List).
 
 product(X, Y, Z) :- Z is X * Y.
 productList(List, Product) :- foldl(product, List, 1, Product).
@@ -99,7 +99,7 @@ checkMatrixDiagonal(Matrix) :-
 checkDiagonal(Diagonal) :- \+ all_different(Diagonal).
 
 checkMatrixSP(Matrix, SP) :-
-    maplist(checkList(), SP, Matrix).
+    maplist(checkList, SP, Matrix).
     
 
 checkList(ListSOrP, List) :-
