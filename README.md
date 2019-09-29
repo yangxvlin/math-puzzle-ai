@@ -3,8 +3,8 @@
 ## How to run
 - Windows:
     - double click ```proj2_test.pl```
-    - ?- [proj2].
-    - ?- do_tests.
+    - `?- [proj2].`
+    - `?- do_tests.`
     - Test result on my `i7-7700K`:
         ```
         ?- [proj2].
@@ -40,6 +40,14 @@
         Marks earned : 100.00 / 100.00
         true.
         ```
+
+## File directory
+```
+-| proj2.pdf     - project description
+ | proj2.pl      - major predicates
+ | proj2_test.pl - test cases
+ | test.pl       - my test cases for predicates
+```
 
 ## Program Description
 This code is for providing the implementation for the math puzzle solver. \
