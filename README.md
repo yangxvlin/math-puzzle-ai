@@ -142,3 +142,5 @@ puzzle_solution(Puzzle) :-
     % step 4: check each cell in Matrix is ground to satisfy constraint 6)
     maplist(label, Matrix).
 ```
+
+## Feedback
