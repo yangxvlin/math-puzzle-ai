@@ -72,7 +72,7 @@ The program approachs the solution by:
 4. ensure each cell in the n*n puzzle is ground.
 
 The program assumes:
-1. The input puzzle matrix is 2*2, 3*3 or 4*4 size (i.e.: n range from 2-4 inclusively).
+1. The input puzzle matrix is 2\*2, 3\*3 or 4\*4 size (i.e.: n range from 2-4 inclusively).
 2. The input Puzzle data structure is made up of an ignored top left corner, bounded header numbers, puzzle matrix with partially bounded or unbounded cells. Detailed example is given below.
 3. The puzzle has at least one solution or returns false if not solvable when a proper Puzzle is given.
 
