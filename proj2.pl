@@ -7,7 +7,7 @@
 %%
 %%|This code is for providing the implementation for the math puzzle solver.
 %% It is defined in one main predicate: 
-%%     puzzle_solution(+Puzzle)
+%%     puzzle_solution(+Puzzle).
 %%     puzzle_solution/1.
 %%
 %% The program is for solving the math puzzle with a n*n squares of grids and a
