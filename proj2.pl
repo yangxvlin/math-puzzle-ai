@@ -10,12 +10,24 @@
 %%     puzzle_solution(+Puzzle).
 %%     puzzle_solution/1.
 %%
-%% e.g.: 
+%% The program is for solving the "Math Puzzle" with a n*n squares of grids 
+%% and a number for each row and column (a graphical representation is given
+%% below). With constraints:
+%%      1. the left-top to bottom right diagonal requires same digit
+%%      2. each column sums or products to the given row number
+%%      3. each row sums or products to the given row number
+%%      4. each row's digits are different
+%%      5. each column's digits are different
+%%      6. each cell of the puzzle matrix is 1-9 digit
+%%
+%% example use: 
 %% ?- Puzzle=[[0,14,10,35],[14,_,_,_],[15,_,_,_],[28,_,1,_]],
 %% |    puzzle_solution(Puzzle).
 %% Puzzle = [[0, 14, 10, 35], [14, 7, 2, 1], [15, 3, 7, 5], [28, 4, 1, 7]] ;
 %% false.
-%%
+%% The input Puzzle data structure is made up of an ignored top left corner,
+%% bounded header numbers, puzzle matrix with partially bounded or unbounded 
+%% cells.
 %% Note: 1) Some cells of the puzzle can be given a digit in the input. 
 %%       Otherwise input has "_" for the predicate to find a digit for unbound
 %%       cell.
@@ -36,39 +48,21 @@
 %%       +---+-----------+                   +---+-----------+
 %%       | 18|  _|  1|  _|                   | 18|  4|  1|  7|
 %%       +---+-----------+                   +---+-----------+
-%%
-%% The program is for solving the math puzzle with a n*n squares of grids and a
-%% number for each row and column (a graphical representation is given below).
-%% With constraints:
-%%      1. the left-top to bottom right diagonal requires same digit
-%%      2. each column sums or products to the given row number
-%%      3. each row sums or products to the given row number
-%%      4. each row's digits are different
-%%      5. each column's digits are different
-%%      6. each cell of the puzzle matrix is 1-9 digit
 %% 
 %% The program approachs the solution by:
+%%      0. unpack the input data structure to a comfortable data structure for 
+%%      me to process the solution
 %%      1. unifies diagonal to the same digit
-%%      Note: It only digitizes variables that are on the diagonal for better
-%%      performance purpose.
 %%      2. generate each row that satisfies constraint 3) 4)
-%%      Note: This generate a candidate row and checks its validity to decide 
-%%      whether or not to continue instead of generating whole Matrix and check 
-%%      the whole matrix which gives a better performance. i.e.: it unifies
-%%      variables in Matrix with digit in range [1,9].
-%%      3. then do the same thing to each column by transpose the puzzle 
-%%      so that can reuse the predicates for rows to unifies columns 
-%%      Note: Matrix's cells are ground now, no need to digitize them. Reuse
-%%      the validate_row/2 to check columns with the help of transpose/2.
+%%      Note: it unifies all variables in Matrix with digit in range [1,9] at 
+%%      this step.
+%%      3. then do the same thing to each column to satisfy constraint 2) 5)
 %%      4. ensure each cell in the n*n puzzle is ground.
 %%
 %% The program assumes:
 %%      1. The input puzzle matrix is 2*2, 3*3 or 4*4 size (i.e.: n range from
 %%         2-4 inclusively).
-%%      2. The input Puzzle data structure is made up of an ignored top left
-%%         corner, bounded header numbers, puzzle matrix with partially bounded
-%%         or unbounded cells. Detailed example is given below.
-%%      3. The puzzle has at least one solution or returns false if not
+%%      2. The puzzle has at least one solution or returns false if not
 %%         solvable when a proper Puzzle is given.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -79,12 +73,12 @@
 :- encoding(utf8).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%			SWI Prolog’s ConstraintLogic Programming Library
+%           SWI Prolog’s ConstraintLogic Programming Library
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- ensure_loaded(library(clpfd)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%			Major predicate
+%           Major predicate
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% puzzle_solution(+Puzzle).
@@ -109,7 +103,7 @@ puzzle_solution(Puzzle) :-
     maplist(label, Matrix).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%	step 0: unpack the input data structure helper predicates
+%   step 0: unpack the input data structure helper predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% unpack_puzzle(+Puzzle, -RowNumbers, -ColumnNumbers, -Matrix).
@@ -140,14 +134,15 @@ lists_nth1(N, [L|Lists], [Elem|Elements], [Rest|Rests]) :-
     lists_nth1(N, Lists, Elements, Rests).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%	step 1: unifies diagonal to the same digit for constraint 1) 
+%   step 1: unifies diagonal to the same digit for constraint 1) 
 %           helper predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% same_diagonal_digits(+Matrix).
 %% It takes a n*n Matrix. Holds when the matrix's top-left to bottom-right
 %% diagonal has the same 1-9 digits.
-%% Note: It unifies unbounded elements on diagonal with digits 1-9.
+%% Note: It only unifies unbounded elements on diagonal with digits 1-9 for
+%% better performance purpose.
 :- discontiguous same_diagonal_digits/1.
 same_diagonal_digits(Matrix) :-
     diagonal(Matrix, Diagonal),
@@ -191,7 +186,7 @@ same([_]).
 same([X,X|Xs]) :- same([X|Xs]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%	step 2: unifies each row with digits that satisfies constraint 3) 4)
+%   step 2: unifies each row with digits that satisfies constraint 3) 4)
 %           helper predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -199,6 +194,7 @@ same([X,X|Xs]) :- same([X|Xs]).
 %% It takes a row number for the row to be summed or producted to and a list of
 %% digits. Bound variables in Row from [1-9]. Holds when the Row satisfies
 %% constraints 3) 4) 6).
+%% Note: all cells in Matrix is now unified with a digit
 :- discontiguous generate_and_validate_row/2.
 generate_and_validate_row(RowNumber, Row) :-
     digitize_list(Row),
@@ -235,7 +231,7 @@ product_list(List, Product) :- foldl(product, List, 1, Product).
 product(X, Y, Z) :- Z #= X * Y.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%	step 3: unifies each column with digits that satisfies constraint 2) 5)
+%   step 3: unifies each column with digits that satisfies constraint 2) 5)
 %           helper predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -243,13 +239,13 @@ product(X, Y, Z) :- Z #= X * Y.
 %% It takes a puzzle Matrix which is a n*n list of lists and a list of
 %% ColumnNumbers for the columns of the Matrix to summed or producted to. Holds
 %% when it satisfies constraint 2) 5).
-%% Note: With the help of transpose/2, validate columns in Matrix has the same
-%%       process when validating rows.
+%% Note: With the help of transpose/2, validate columns in Matrix can reuse 
+%% validate_row/2.
 :- discontiguous validate_columns/2.
 validate_columns(Matrix, ColumnNumbers) :-
     transpose(Matrix, MatrixTrans),
     maplist(validate_row, ColumnNumbers, MatrixTrans).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%	End by XuLin Yang, 904904
+%   End by XuLin Yang, 904904
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

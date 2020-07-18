@@ -129,3 +129,6 @@ puzzle_solution(Puzzle) :-
 ```
 
 ## Feedback
+
+- [93.000000%](./feedback.txt)
+- [feedback](./feedback.pdf)
